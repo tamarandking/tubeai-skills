@@ -1,12 +1,12 @@
 ---
 name: tubeai-video
-description: Assisted-animation and editing workflow for YouTube channel videos, built on Remotion. Sets up or resumes the project (Remotion, yt-dlp, headless Chromium, GPU renders, local voice and transcription), keeps each channel's branding and reusable animations consistent, finds video ideas and drafts scripts with the user (with YouTube data from the optional TubeAI connector), matches existing animation styles from a YouTube link or video file, researches media (news articles, X/Reddit posts, YouTube clips), generates voiceovers with Qwen3-TTS, edits a creator's raw recording (transcribes it, cuts it against the script and times the inserts to the words), and delivers the edit as a Premiere Pro XML and OTIO timeline. Assumes a non-technical user and does all the technical work itself. Use when the user wants to set up the video project, add a channel, find video ideas, share a style reference, edit a recording, or plan, research, animate, voice or render a scene.
+description: Assisted-animation and editing workflow for YouTube channel videos, built on Remotion. Sets up or resumes the project (Remotion, yt-dlp, headless Chromium, GPU renders, local voice and transcription), keeps each channel's branding and reusable animations consistent, finds video ideas and drafts scripts with the user (with YouTube data from the optional TubeAI connector), matches existing animation styles from a YouTube link or video file, researches media (news articles, X/Reddit posts, YouTube clips), generates voiceovers with Qwen3-TTS, edits a creator's raw recording (transcribes it, cuts it against the script and times the inserts to the words), and delivers the edit as a timeline for Premiere Pro (XML), Final Cut Pro (FCPXML) and DaVinci Resolve (OTIO). Assumes a non-technical user and does all the technical work itself. Use when the user wants to set up the video project, add a channel, find video ideas, share a style reference, edit a recording, or plan, research, animate, voice or render a scene.
 argument-hint: "[setup | new channel <name> | video ideas | style reference <link or file> | edit <recording> | scene idea]"
 ---
 
 # TubeAI Video: assisted animations and edits
 
-The user edits videos for YouTube channels. We build animated scenes in Remotion that they drop into their edit, and we can edit a creator's raw recording for them: cut it, time the inserts to the words, and hand it over as a Premiere Pro timeline they finish themselves. Each channel's branding stays consistent: its styling and animations are set once, then reused or used as the base for new ones. The user brings ideas, some of the media and sometimes a raw recording, and can share a YouTube link or a video file to show the style of the current animations. Through the optional TubeAI connector, Claude also helps find video ideas and draft scripts. Claude researches the rest, builds the animations, and cuts and renders.
+The user edits videos for YouTube channels. We build animated scenes in Remotion that they drop into their edit, and we can edit a creator's raw recording for them: cut it, time the inserts to the words, and hand it over as a timeline they finish in Premiere Pro, Final Cut Pro or DaVinci Resolve. Each channel's branding stays consistent: its styling and animations are set once, then reused or used as the base for new ones. The user brings ideas, some of the media and sometimes a raw recording, and can share a YouTube link or a video file to show the style of the current animations. Through the optional TubeAI connector, Claude also helps find video ideas and draft scripts. Claude researches the rest, builds the animations, and cuts and renders.
 
 ## The user isn't technical
 
@@ -114,7 +114,7 @@ The user wants a quick setup with no fuss, and then videos made without friction
 │  └─ automated-research/ # everything Claude finds or makes: <video>/, style-refs/ and voice/, each with SOURCES.md
 ├─ recordings/<slug>/     # raw recordings, outside media/ so renders never copy them
 ├─ archive/<slug>/        # research media of shipped videos, kept out of media/
-└─ out/<slug>/<video>/    # renders, and timeline/ with the .otio and .xml exports
+└─ out/<slug>/<video>/    # renders, and timeline/ with the .xml, .fcpxml and .otio exports
 ```
 
 ## PROJECTS.md
@@ -229,7 +229,7 @@ The user can provide a YouTube link or a video file to show the style of the cur
 
 When the user hands in a creator's raw recording (a file in `recordings/<slug>/`, or a path), edit it into a timeline they finish in their own editor. The recording itself is never changed, so there's nothing to approve before cutting. `video-editor` does the transcript, the cut and the timing table; `video-animator` builds the inserts.
 
-**The deliverable is a timeline, not a video.** Editors polish and export in Premiere themselves. Deliver the Final Cut Pro 7 `.xml` (Premiere imports it as a ready sequence: File → Import) and an `.otio` (DaVinci Resolve 18.5+: File → Import → Timeline; Premiere Pro 25.6+). Render an MP4 only when the user asks for one.
+**The deliverable is a timeline, not a video.** Editors polish and export in Premiere themselves. Deliver the Final Cut Pro 7 `.xml` (Premiere imports it as a ready sequence: File → Import), an `.fcpxml` for today's Final Cut Pro (File → Import → XML) and an `.otio` (DaVinci Resolve 18.5+: File → Import → Timeline; Premiere Pro 25.6+). Render an MP4 only when the user asks for one.
 
 Give the user a rough time for the whole edit up front, then work in this order:
 
@@ -239,7 +239,7 @@ Give the user a rough time for the whole edit up front, then work in this order:
 4. **Cut** it (below), and deliver the cut-only timeline, so the user can review the cut while the inserts are built.
 5. **Build the timing table** (below).
 6. **Build the inserts**, each timed from its window in the table.
-7. **Assemble** the timeline: `npm run assemble` turns the windows and renders into the timeline spec, and `npm run timeline` writes the `.xml` and `.otio`.
+7. **Assemble** the timeline: `npm run assemble` turns the windows and renders into the timeline spec, and `npm run timeline` writes the `.xml`, `.fcpxml` and `.otio`.
 8. **QA** everything (see Rendering), and read the timeline back through OpenTimelineIO.
 9. **Deliver** the full timeline, with the exact path to each file.
 
@@ -317,7 +317,7 @@ They live in `core/templates/`, carry no channel branding and are driven by prop
 
   Set quality with `--video-bitrate`, because hardware encoders don't accept `--crf`.
 - Alpha overlays for the editing software use ProRes 4444 (`--image-format=png --pixel-format=yuva444p10le --codec=prores --prores-profile=4444`). Frames still render on the GPU. On Windows the encode runs on the CPU, because NVENC can't encode ProRes; it's the one exception there, so say so whenever you use it. On a Mac, VideoToolbox encodes ProRes: use `--hardware-acceleration=if-possible`, so it falls back to the CPU if it won't take the alpha channel.
-- Any video can also go out as a timeline, the professional output: the Premiere `.xml` and the `.otio` (see Editing a recording), with the scenes at their start times over the voiceover when there is one, and a marker on each. It's the default for a recording. For other videos, offer it when the user finishes in Premiere or Resolve, and make it whenever they ask.
+- Any video can also go out as a timeline, the professional output: the Premiere `.xml`, the Final Cut `.fcpxml` and the `.otio` (see Editing a recording), with the scenes at their start times over the voiceover when there is one, and a marker on each. It's the default for a recording. For other videos, offer it when the user finishes in Premiere, Final Cut or Resolve, and make it whenever they ask.
 - `angle` can leak memory on long renders. Keep each composition to one scene, and split with `--frames` if one runs long.
 - Never put a live CSS `filter: blur()` on a large photo: rendered on the GPU across parallel tabs, it flashes single white frames and black flicker. Pre-blur each background once (cached copies at 2560 px or less), crossfade from sharp to blurred by opacity, and hold each frame until its images are decoded.
 - The hardware check sets the concurrency (how many frames render at once) for this machine. If a render runs out of memory or the computer slows to a crawl, halve it, save the new value in `render-settings.ts` and under "This machine" in `GUIDELINES.md`, and render again.
@@ -393,7 +393,7 @@ For the user, setup is a single request. Claude does every step below and only s
    - PyTorch: on Windows, the CUDA build when the hardware check found an NVIDIA GPU (confirm with `torch.cuda.is_available()`), otherwise the CPU build. On a Mac, the standard build, which on Apple Silicon includes the `mps` GPU device (confirm with `torch.backends.mps.is_available()`).
    - `qwen-tts`. It pins its own `transformers` version, which is one reason it gets its own environment.
    - `crisperwhisper[transformers]`, for transcripts. It only needs `transformers` 4.40 or newer, so it shares this environment with `qwen-tts`; if their versions ever clash, give it its own. Its faster CTranslate2 runtime only exists for Linux.
-   - `opentimelineio` and its Final Cut Pro 7 XML adapter (`otio-fcp-adapter`), to read every exported timeline back as a check.
+   - `opentimelineio` with its Final Cut Pro 7 XML and Final Cut Pro X adapters (`otio-fcp-adapter`, `otio-fcpx-xml-adapter`), to read every exported timeline back as a check.
    - The voice model size, device and precision from the hardware check. Download only its CustomVoice model now, in the background; Base and VoiceDesign download the first time they're needed. FlashAttention is optional.
 5. Download the transcription model the hardware check picked, in the background, then transcribe a 10-second test clip. It should run on the GPU where there is one (CUDA on NVIDIA, `mps` on Apple Silicon), and on the CPU otherwise.
 6. Create the layout above. The entry point `core/index.ts` registers `core/Root.tsx`, which mounts a `<Folder>` per channel plus a `templates` folder of demos.
@@ -405,14 +405,14 @@ For the user, setup is a single request. Claude does every step below and only s
    - `transcribe`: runs CrisperWhisper through the `.venv` Python on a 16 kHz mono WAV, verbatim with word timestamps, and writes `transcript.json` (Remotion captions: `text`, `startMs`, `endMs`) and `timings.json`, with names and terms corrected against the glossary. It can also transcribe or `forced_align` a short window, for checking joins.
    - `cut`: the transcript against the script → a draft `cuts.json` (retakes and false starts, each with its reason) and `CUTS.md`, plus a re-transcription of about 2 s either side of every join.
    - `assemble`: a video's windows (`insert-windows.json` for a recording, the `timings.json` beats for a voiceover) and its renders → the timeline spec.
-   - `timeline`: a timeline spec (the kept segments of the recording, the inserts and the markers) → Final Cut Pro 7 `.xml` and `.otio`, written directly and following the Timeline recipe below. It then reads the `.xml` back through OpenTimelineIO and checks the clip counts, positions and total length.
+   - `timeline`: a timeline spec (the kept segments of the recording, the inserts and the markers) → Final Cut Pro 7 `.xml` (Premiere), `.fcpxml` (Final Cut Pro) and `.otio` (Resolve), written directly and following the Timeline recipe below. It then reads the `.xml` and `.fcpxml` back through OpenTimelineIO and checks the clip counts, positions and total length.
    - `render`: bundles once per run, renders each ID with the settings from `render-settings.ts`, and, when encoding with NVENC, checks the NVIDIA driver first.
    - `qa`: the flash scan on a render (see Rendering), over mid-grey for alpha files.
 9. Build the core templates and their demos, then benchmark the concurrency on one of them (see Hardware check).
 10. Create the channel(s) the user names (see Channels). Brand work needs the user's input, ideally with a style reference.
 11. Write the three agent files below into `.claude/agents/`. In `video-researcher.md`, name the TubeAI skill exactly as the skill list shows it: `tubeai:tubeai-mcp` when it came with the plugin, `tubeai-mcp` otherwise.
 12. Write the docs:
-    - `README.md` for the user, in plain language with click-level steps. Claude normally runs everything, so this is only for doing it by hand; keep it short. It covers connecting TubeAI (in the Claude app, or with one line in the terminal), previewing with `npm run studio` (http://localhost:3000), one example each for render, alpha, still, capture, clip, voice and transcribe, where to put media, how to share a style reference (paste a YouTube link in the chat, or give the path to a video file), where to put a recording to edit (`recordings/<slug>/`), how to open the exported timeline in Premiere or Resolve, and where renders go.
+    - `README.md` for the user, in plain language with click-level steps. Claude normally runs everything, so this is only for doing it by hand; keep it short. It covers connecting TubeAI (in the Claude app, or with one line in the terminal), previewing with `npm run studio` (http://localhost:3000), one example each for render, alpha, still, capture, clip, voice and transcribe, where to put media, how to share a style reference (paste a YouTube link in the chat, or give the path to a video file), where to put a recording to edit (`recordings/<slug>/`), how to open the exported timeline in Premiere, Final Cut or Resolve, and where renders go.
     - `GUIDELINES.md`: these sections of this skill, adapted to what was actually installed and verified: The user isn't technical, Keep it fast and smooth, Workflow through Rendering, and Troubleshooting. Add a "This machine" section with the hardware check's findings and choices.
     - `PROJECTS.md`, from the template in the PROJECTS.md section, with the channel(s) just created and no videos yet.
     - `CLAUDE.md`, containing `@GUIDELINES.md` and `@PROJECTS.md`, each on its own line.
@@ -423,7 +423,7 @@ For the user, setup is a single request. Claude does every step below and only s
     - a real news article through both Claude in Chrome (if connected, it opens and screenshots the page) and `npm run capture` (saves PNG + JSON)
     - a 10-second yt-dlp test clip, noting which client worked and at what resolution
     - a short `npm run voice` line, transcribed back with `npm run transcribe`: the words should come back right
-    - a two-cut test: `npm run timeline` on a short clip with two cuts, read back through OpenTimelineIO with the right clip count and length
+    - a two-cut test: `npm run timeline` on a short clip with two cuts, with the `.xml` and `.fcpxml` both read back through OpenTimelineIO with the right clip count and length
 
     If anything fails, say so and include the error.
 
@@ -447,9 +447,11 @@ Fix these without the user where possible, telling them in a line what's happeni
 - **Timeline clips run past the end of a render:** its audio stream is longer than its picture (AAC priming). Take lengths from the video stream's `nb_frames`.
 - **Every render is slow and the disk fills up:** a raw recording sits inside `media/`, so every render copies it. Recordings belong in `recordings/`.
 
-## Timeline recipe (Premiere XML and OTIO)
+## Timeline recipe (Premiere XML, Final Cut FCPXML and OTIO)
 
-The `timeline` script follows this recipe, which was confirmed in Premiere Pro 2025 (File → Import).
+The `timeline` script writes three files from one timeline spec: a Final Cut Pro 7 `.xml` for Premiere Pro, an `.fcpxml` for today's Final Cut Pro, and an `.otio` for DaVinci Resolve. The Premiere recipe was confirmed in Premiere Pro 2025 (File → Import). The Final Cut recipe hasn't been through a real import yet, so ask the first Final Cut user to confirm it, and fix the recipe from what they report.
+
+**Premiere Pro (Final Cut Pro 7 XML)**
 
 - **Why Final Cut Pro 7 XML** (`xmeml` version 4): Premiere's own `.prproj` isn't documented, while FCP7 XML imports as a ready sequence in every Premiere version. OTIO import only exists in recent Premiere builds; Resolve reads OTIO.
 - **Sequence:** `<rate>` with `<timebase>` and `<ntsc>` (29.97 = timebase 30, NTSC TRUE; 23.976 = 24, TRUE), a `<timecode>`, a video `<format>` with the recording's width and height, and audio `<numOutputChannels>2` with an `<outputs>` block of two mono groups.
@@ -461,7 +463,23 @@ The `timeline` script follows this recipe, which was confirmed in Premiere Pro 2
 - **Lengths come from the picture, not the container.** AAC priming (2048 samples, about 43 ms at 48 kHz) makes a render's audio a few frames longer than its video. Use the video stream's `nb_frames`, or out-points run past the last frame.
 - **Cuts as kept segments:** every kept segment of the recording sits on V1, back to back, each linked to the original file with its in and out points, so every cut stays a normal edit point the editor can roll open. In the spec: `"main": { "file", "segments": [{ "in", "out" }] }`. For a video with no recording, `main` is the voiceover as one audio-only segment, or is left out.
 - **Track layout:** V1 holds the cut, with its audio on A1/A2. V2 holds the full-frame inserts; an insert that would overlap the previous one moves up to V3. The top track holds the overlays (lists, lower thirds, CTA, tags) and the end dip to black. Each insert's audio goes on the next free stereo pair. No empty tracks. With no recording, V1 holds the full-frame scenes at their start times, over the voiceover on A1/A2 when there is one.
-- **Validate every export:** read the `.xml` back with OpenTimelineIO's Final Cut Pro 7 XML adapter (an independent implementation) and check the clip counts, positions and total length.
+**Final Cut Pro (FCPXML)**
+
+Final Cut Pro 10 and 11 can't open the Final Cut Pro 7 XML above. They read FCPXML, Apple's documented format (File → Import → XML).
+
+- **Version:** write one from a few years back, such as 1.10. Newer Final Cut reads older FCPXML, not the other way round. A plain `.fcpxml` file is enough; no `.fcpxmld` bundle is needed.
+- **Structure:** `<fcpxml version>` → `<resources>` (one `<format>`, and one `<asset>` per file) → `<event>` → `<project>` → `<sequence>` → `<spine>`.
+- **Format:** `frameDuration` from the frame rate (23.976 = `1001/24000s`, 24 = `100/2400s`, 25 = `100/2500s`, 29.97 = `1001/30000s`, 30 = `100/3000s`, 59.94 = `1001/60000s`), plus `width` and `height`. Use Apple's standard format name when there is one (such as `FFVideoFormat1080p2997`); otherwise leave the name out.
+- **Time** is always rational seconds on frame boundaries (a whole number of `frameDuration`s, such as `3003/30000s`), never decimals, so NTSC rates stay exact.
+- **Assets:** `start` is the file's own start timecode (`0s` when it has none), and every in-point is measured from it. Add `duration` (from the picture, as above), `hasVideo`, `hasAudio`, `audioSources`, `audioChannels`, `audioRate` and `format`, and a `<media-rep kind="original-media" src="file:///…"/>` with the absolute path, each segment URI-encoded. Final Cut asks to relink if files move.
+- **The cut:** every kept segment is an `<asset-clip>` on the spine, back to back. Its `offset` is its position in the timeline, `start` its in-point and `duration` its length. The spine is Final Cut's main storyline, so every cut stays a normal edit the editor can adjust.
+- **Inserts** are connected clips: an `<asset-clip>` nested in the spine clip under its first frame, with `lane="1"` for full-frame inserts and higher lanes for overlaps and overlays. A connected clip's `offset` is in its parent's local time: `offset = parent's start + (the insert's timeline position − parent's offset)`. Getting this wrong shifts every insert.
+- **Markers:** a `<marker>` inside each insert's clip, with `start` at the clip's own `start`, one frame long, the insert's ID as `value` and its cue line as `note`.
+- **Sequence:** `format`, the total `duration`, `tcStart="0s"`, `tcFormat="NDF"`, `audioLayout="stereo"` and `audioRate="48k"`. With no recording, the voiceover is the spine (or a `<gap>` when there isn't one), and the scenes connect to it the same way.
+
+**All three**
+
+- **Validate every export:** read the `.xml` back with OpenTimelineIO's Final Cut Pro 7 XML adapter and the `.fcpxml` with its Final Cut Pro X adapter (independent implementations), and check the clip counts, positions and total length.
 - **OTIO pitfalls:** `Marker.1` uses `range`, while `Marker.2` uses `marked_range` plus `comment`. Use `Clip.1` with `media_reference` for older readers.
 
 ## Agent files
@@ -553,7 +571,7 @@ Report back: files changed, composition ID, still and render paths, the QA resul
 ```markdown
 ---
 name: video-editor
-description: Edits a creator's raw recording into a timeline for Premiere Pro. Transcribes it with CrisperWhisper, cuts only clear mistakes against the script, verifies every join, builds the timing table the inserts sync to, and exports a Final Cut Pro 7 XML and OTIO timeline.
+description: Edits a creator's raw recording into a timeline for Premiere Pro. Transcribes it with CrisperWhisper, cuts only clear mistakes against the script, verifies every join, builds the timing table the inserts sync to, and exports the timeline for Premiere Pro (XML), Final Cut Pro (FCPXML) and DaVinci Resolve (OTIO).
 model: claude-opus-5-5
 effort: xhigh
 skills:

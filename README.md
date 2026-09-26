@@ -2,6 +2,8 @@
 
 One Claude Code plugin for YouTube creators: a video editor, plus optional YouTube research from [TubeAI](https://tubeai.app).
 
+**[Watch the demo video](https://x.com/NickBYT_/status/2103899747396587670)** (on X)
+
 ## A video editor in Claude Code
 
 Tell Claude what you want in your video, and it does the technical work: it sets up a video project on your computer, builds the animations, and cuts and renders. It's made for creators and editors who aren't technical.

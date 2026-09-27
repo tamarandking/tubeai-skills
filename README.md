@@ -113,3 +113,10 @@ When you're happy, say **"Render it"**. Claude renders, checks every file before
 ### 6. Pick up where you left off
 
 Open Claude Code in the project folder and say what you want to work on ("Let's continue the video about …"), or just ask **"What's next?"**. Claude knows where every channel and video stands, sums it up and suggests the next step.
+
+
+## ChatGPT and Codex companion skill
+
+This repository also includes a companion skill for ChatGPT and Codex at [`skills/tubeai-creator-workflow/SKILL.md`](skills/tubeai-creator-workflow/SKILL.md). It adapts the planning and creative workflow for sessions that can help with research, scripts, storyboards, visual direction, and project files. It uses only tools available in the current session and does not claim access to the Claude Code plugin, TubeAI research database, local video-editing setup, or rendering unless those capabilities are actually connected and used.
+
+The companion skill is separate from the Claude Code marketplace plugin: it is not listed in `.claude-plugin/marketplace.json` and does not change how the existing Claude Code installation works.

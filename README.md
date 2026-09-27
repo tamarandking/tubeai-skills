@@ -120,3 +120,16 @@ Open Claude Code in the project folder and say what you want to work on ("Let's 
 This repository also includes a companion skill for ChatGPT and Codex at [`skills/tubeai-creator-workflow/SKILL.md`](skills/tubeai-creator-workflow/SKILL.md). It adapts the planning and creative workflow for sessions that can help with research, scripts, storyboards, visual direction, and project files. It uses only tools available in the current session and does not claim access to the Claude Code plugin, TubeAI research database, local video-editing setup, or rendering unless those capabilities are actually connected and used.
 
 The companion skill is separate from the Claude Code marketplace plugin: it is not listed in `.claude-plugin/marketplace.json` and does not change how the existing Claude Code installation works.
+
+
+## Codex: local video editing and rendering
+
+The `codex-plugin/` directory packages a Codex workflow for the local production setup. In Codex desktop or CLI, add this repository as a plugin marketplace:
+
+```sh
+codex plugin marketplace add tamarandking/tubeai-skills --ref main
+```
+
+Then open the ChatGPT desktop app's **Plugins Directory**, choose the `tubeai-codex` marketplace, and install **TubeAI for Codex**. Open a local project folder in Codex and ask it to **set up my video project**. The skill will inspect the machine and project, explain the packages and model downloads, ask before installing, then follow the setup and smoke checks in the existing `tubeai-video` workflow.
+
+Local rendering requires Codex to be running with access to the computer, project files, terminal, and GPU. ChatGPT Work without a local workspace can help with creative planning but cannot run the local video editor. TubeAI research is optional; the bundled remote connection may require signing in. The Claude Code plugin and its installation instructions are unchanged.

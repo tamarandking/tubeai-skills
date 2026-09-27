@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "tubeai-video-production",
+  "version": "0.1.0",
+  "description": "Plan, build, edit, and render YouTube videos in a local Codex workspace using TubeAI's Remotion workflow.",
+  "author": {
+    "name": "TubeAI"
+  },
+  "repository": "https://github.com/tamarandking/tubeai-skills",
+  "keywords": ["youtube", "video", "remotion", "editing", "rendering"]
+}
